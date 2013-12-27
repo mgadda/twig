@@ -1,0 +1,126 @@
+#!/usr/bin/env ruby
+
+# Initializes fish tab completion for Twig. To use this, run
+# `twig init-completion` and follow the instructions.
+#
+# Subcommand for Twig: <http://rondevera.github.io/twig/>
+# Author: Matt Gadda <http://github.com/mgadda>
+# Adapted from twig-init-completion-bash
+
+require 'fileutils'
+require 'rubygems'
+require 'twig'
+
+script = <<-SCRIPT
+# AUTO-GENERATED with Twig v#{Twig::VERSION}. Regenerate with
+# `twig init-completion --force`.
+#
+# Initializes fish tab completion for Twig. To use this, run
+# `twig init-completion` and follow the instructions.
+#
+# Twig: <#{Twig::HOMEPAGE}>
+# Author: Matt Gadda <http://github.com/mgadda>
+
+function __fish_twig_needs_command
+  set cmd (commandline -opc)
+  if [ (count $cmd) -eq 1 -a $cmd[1] = 'twig' ]
+    return 0
+  end
+  return 1
+end
+
+function __fish_twig_using_command
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 1 ]
+    if [ $argv[1] = $cmd[2] ]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_twig_branches
+  command git for-each-ref refs/heads/ --format="%(refname:short)"
+end
+
+function __fish_twig_formats
+  echo "json"
+end
+
+function __fish_twig_properties
+  command git config --get-regexp "^branch\." | cut -d " " -f 1 | cut -d "." -f 3
+end
+
+function __fish_twig_styles
+  set styles black red green yellow blue purple cyan white normal bold
+  for style in $styles
+    echo $style
+  end
+end
+
+complete -f -c twig -n 'not __fish_twig_needs_command' -l help -d 'Display the manual of a git command'
+
+complete -f -c twig -n '__fish_twig_needs_command' -a "diff"
+complete -f -c twig -n '__fish_twig_using_command diff' -a '(__fish_twig_branches)'
+
+complete -x -c twig -n '__fish_twig_needs_command' -a "diff-branch"
+complete -x -c twig -n '__fish_twig_using_command diff-branch' -a '(__fish_twig_branches)'
+
+complete -x -c twig -n '__fish_twig_needs_command' -a "rebase"
+complete -x -c twig -n '__fish_twig_using_command rebase' -a '(__fish_twig_branches)'
+
+complete -x -c twig -s b -a '(__fish_twig_branches)' -d "Use a specific branch."
+complete -x -c twig -l format -a '(__fish_twig_formats)'
+complete -x -c twig -l unset -a '(__fish_twig_properties)' -d "Unset a branch property."
+complete -f -c twig -l version -d "Show Twig version."
+complete -x -c twig -l "max-days-old" -d "Only list branches below a given age."
+complete -x -c twig -l "only-branch" -d "Only list branches whose name matches a given pattern."
+complete -x -c twig -l "except-branch" -d "Do not list branches whose name matches a given pattern."
+complete -c twig -l "all" -d "Lists all branches regardless of other filtering options. Useful for overriding options in .twigconfig."
+complete -x -c twig -l "branch-width" -d "Set the width for the `branch` column. (Default: 48)"
+complete -x -c twig -l "only-property" -d "Only include properties where the property name matches the given regular expression."
+complete -x -c twig -l "except-property" -d "Exclude properties where the property name matches the given regular expression."
+complete -x -c twig -l "header-style" -a '(__fish_twig_styles)' -d "STYLE is a color, weight, or a space-separated pair of one of each. (Default: \"blue\")"
+complete -c twig -l "reverse" -d "Show oldest branches first. (Default: false)"
+complete -x -c twig -l "github-api-uri-prefix" -d "Set a custom GitHub API URI prefix, e.g., https://github-enterprise.example.com/api/v3. (Default: \"https://api.github.com\")"
+complete -x -c twig -l "github-uri-prefix" -d "Set a custom GitHub URI prefix, e.g., https://github-enterprise.example.com. (Default: \"https://github.com\")"
+SCRIPT
+script = script.strip + "\n"
+
+
+
+args  = ARGV.dup
+force = args.delete('--force')
+
+#twig_dir = '~/.twig'
+fish_completion_dir = "~/.config/fish/completions"
+#FileUtils.mkdir_p(File.expand_path(twig_dir))
+FileUtils.mkdir_p(File.expand_path(fish_completion_dir))
+
+script_path      = File.join(fish_completion_dir, '/twig-completion.fish')
+full_script_path = File.expand_path(script_path)
+script_exists    = File.exists?(full_script_path)
+
+if script_exists && !force
+  puts "The file `#{script_path}` already exists."
+  puts "To overwrite it, run `twig init-completion --force`."
+else
+  File.open(full_script_path, 'w') do |file|
+    file.write script
+  end
+
+  if script_exists
+    puts "Overwrote #{script_path}."
+  else
+    puts "Created #{script_path}."
+  end
+end
+
+puts
+puts "Twig completion has been enabled."
+# puts 'To enable tab completion for Twig, add the following to your `~/.config/fish/config.fish`'
+# puts 'or equivalent:'
+# puts
+# puts "  [[ -s #{script_path} ]] && source #{script_path}"
+# puts
+# puts 'To finish setup, open a new command-line window or run `source ~/.config/fish/config.fish`.'

@@ -15,5 +15,5 @@ if debug
   puts "- bash_version: #{bash_version.inspect}"
 end
 
-exec('twig-init-completion-bash ' + args.join(' ')) if bash_version != ''
+exec("twig-init-completion-#{File.basename(ENV["SHELL"])} " + args.join(' ')) if bash_version != ''
 abort 'Could not initialize Twig tab completion for this shell.'
